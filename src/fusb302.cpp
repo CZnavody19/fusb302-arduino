@@ -70,10 +70,9 @@ void fusb302::start_sink() {
 }
 
 void fusb302::poll() {
-    if (hal.is_interrupt_asserted()) {
-        check_for_interrupts();
+    check_for_interrupts();
 
-    } else if (has_timeout_expired()) {
+    if (has_timeout_expired()) {
         if (state_ == fusb302_state::usb_pd_wait) {
             DEBUG_LOG("%lu: No CC activity\r\n", hal.millis());
             establish_retry_wait();
@@ -186,8 +185,6 @@ void fusb302::establish_usb_20() {
 }
 
 void fusb302::establish_usb_pd_wait(int cc) {
-    // Configure INT_N pin
-    hal.init_int_n();
 
     // Enable automatic retries
     write_register(reg_control3, control3_auto_retry | control3_3_retries);
@@ -203,8 +200,6 @@ void fusb302::establish_usb_pd_wait(int cc) {
     // Configure: auto CRC and BMC transmit on CC pin
     write_register(reg_switches1,
                    switches1_specrev_rev_2_0 | switches1_auto_crc | (cc == 1 ? switches1_txcc1 : switches1_txcc2));
-    // Enable interrupt
-    write_register(reg_control0, control0_none);
 
     state_ = fusb302_state::usb_pd_wait;
     start_timeout(300);
@@ -298,6 +293,12 @@ void fusb302::send_message(uint16_t header, const uint8_t* payload) {
     buf[n++] = token_eop;
     buf[n++] = token_txoff;
     buf[n++] = token_txon;
+
+    DEBUG_LOG("buf: %d\n", n);
+    for (int i = 0; i <= n; i++) {
+        DEBUG_LOG("%d ", buf[i]);
+    }
+    DEBUG_LOG("\n", 0);
 
     hal.pd_ctrl_write(reg_fifos, n, buf);
 
