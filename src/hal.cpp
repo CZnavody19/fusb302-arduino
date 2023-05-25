@@ -10,12 +10,12 @@
 
 #include "hal.h"
 
-#include <libopencmsis/core_cm3.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/exti.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencmsis/core_cm3.h>
 
 #include "i2c_bit_bang.h"
 #include "pd_debug.h"
@@ -56,38 +56,7 @@ void mcu_hal::init() {
 
     DEBUG_INIT();
 
-    // Initialize LED
-    gpio_mode_setup(led_red_port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, led_red_pin);
-    gpio_mode_setup(led_green_port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, led_green_pin);
-    gpio_mode_setup(led_blue_port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, led_blue_pin);
-    set_led(color::off);
-
     i2c.init();
-
-    // Initialize button
-    gpio_mode_setup(button_port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, button_pin);
-    is_button_down = false;
-    last_button_change_time = 0;
-    button_has_been_pressed = false;
-}
-
-void mcu_hal::init_int_n() {
-    // configure FUSB302 interrupt line
-    gpio_mode_setup(fusb302_int_n_port, GPIO_MODE_INPUT, GPIO_PUPD_NONE, fusb302_int_n_pin);
-
-    // enable interrupt (so the MCU wakes)
-	nvic_enable_irq(fusb302_int_n_irq);
-    uint32_t exti = fusb302_int_n_pin; // EXIT and GPIO use same bit mask
-    exti_select_source(exti, fusb302_int_n_port);
-    exti_set_trigger(exti, EXTI_TRIGGER_FALLING);
-    exti_enable_request(exti);
-}
-
-extern "C" void exti4_15_isr(void) {
-    uint32_t exti = fusb302_int_n_pin; // EXIT and GPIO use same bit mask
-	exti_reset_request(exti);
-
-    // nothing to do; just used to wake up MCU
 }
 
 void mcu_hal::pd_ctrl_read(uint8_t reg, int data_len, uint8_t* data) {
@@ -100,88 +69,6 @@ void mcu_hal::pd_ctrl_write(uint8_t reg, int data_len, const uint8_t* data, bool
     bool ack = i2c.write_data(fusb302_i2c_addr, reg, data_len, data, end_with_stop);
     if (!ack)
         DEBUG_LOG("NACK write %d\r\n", reg);
-}
-
-bool mcu_hal::is_interrupt_asserted() {
-    return gpio_get(fusb302_int_n_port, fusb302_int_n_pin) == 0;
-}
-
-void mcu_hal::set_led(color c, uint32_t on, uint32_t off) {
-    uint8_t cv = static_cast<uint8_t>(c);
-
-    if ((cv & 0b100) != 0)
-        gpio_set(led_red_port, led_red_pin);
-    else
-        gpio_clear(led_red_port, led_red_pin);
-
-    if ((cv & 0b010) != 0)
-        gpio_set(led_green_port, led_green_pin);
-    else
-        gpio_clear(led_green_port, led_green_pin);
-
-    if ((cv & 0b001) != 0)
-        gpio_set(led_blue_port, led_blue_pin);
-    else
-        gpio_clear(led_blue_port, led_blue_pin);
-
-    led_color = c;
-    led_on = on;
-    led_off = off;
-    is_led_on = true;
-    led_timeout = millis() + (off != 0 ? on : 0x7fffffff);
-}
-
-void mcu_hal::update_led() {
-    if (!has_expired(led_timeout))
-        return;
-
-    if (is_led_on && led_off != 0) {
-        gpio_set(led_red_port, led_red_pin);
-        gpio_set(led_green_port, led_green_pin);
-        gpio_set(led_blue_port, led_blue_pin);
-        is_led_on = false;
-        led_timeout += led_off;
-    } else {
-        set_led(led_color, led_on, led_off);
-    }
-}
-
-bool mcu_hal::has_button_been_pressed() {
-    if (button_has_been_pressed) {
-        button_has_been_pressed = false;
-        return true;
-    }
-
-    return false;
-}
-
-bool mcu_hal::is_button_being_pressed() {
-    return is_button_down;
-}
-
-bool mcu_hal::is_long_press() {
-    return is_button_down && (millis() - last_button_change_time) > 700;
-}
-
-void mcu_hal::poll() {
-    update_led();
-
-    // check for button change
-    bool is_down = gpio_get(button_port, button_pin) == 0;
-
-    if (is_button_down != is_down) {
-
-        // check for button release after the button has been held down for more than 50ms
-        if (!is_down && (millis() - last_button_change_time) > 50)
-            button_has_been_pressed = true;
-
-        is_button_down = is_down;
-        last_button_change_time = millis();
-    }
-}
-
-void mcu_hal::wait_for_event() {
-    __WFI();
 }
 
 uint32_t mcu_hal::millis() {

@@ -22,18 +22,7 @@ static const char* const PRODUCT_IDS[] = {"FUSB302B__X", "FUSB302B01MPX", "FUSB3
 
 static const char* VERSIONS = "????????ABCDEFGH";
 
-void fusb302::get_device_id(char* device_id_buf) {
-    uint8_t device_id = read_register(reg_device_id);
-    uint8_t version_id = device_id >> 4;
-    uint8_t product_id = (device_id >> 2) & 0x03;
-    uint8_t revision_id = device_id & 0x03;
-
-    strcpy(device_id_buf, PRODUCT_IDS[product_id]);
-    char piece[8] = " ._rev.";
-    piece[1] = VERSIONS[version_id];
-    piece[6] = 'A' + revision_id;
-    strcat(device_id_buf, piece);
-}
+void fusb302::get_device_id(char* device_id_buf) {}
 
 void fusb302::init() {
     // full reset

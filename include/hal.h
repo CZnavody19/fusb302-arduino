@@ -64,68 +64,6 @@ struct mcu_hal {
     void pd_ctrl_write(uint8_t reg, int data_len, const uint8_t* data, bool end_with_stop = true);
 
     /**
-     * Gets if the interrupt pin is assert (low).
-     *
-     * @return `true` if the pin is asserted, `false` otherwise.
-     */
-    bool is_interrupt_asserted();
-
-    /**
-     * Sets the LED color and flash pattern.
-     *
-     * If the LED is not supposed to flash, specify 0 for both
-     * 'on' and 'off'.
-     *
-     * @param c color
-     * @param on flash on duration (in ms)
-     * @param off flash off duration (in ms)
-     */
-    void set_led(color c, uint32_t on = 0, uint32_t off = 0);
-
-    /**
-     * Returns if the button has been pressed.
-     *
-     * Button presses are reported after the button has
-     * been released.
-     *
-     * It will return 'true' once and then return 'false' until
-     * the button has been released and pressed again.
-     *
-     * @return `true` if the button has been pressed
-     */
-    bool has_button_been_pressed();
-
-    /**
-     * Returns true if the button is currently being pressed.
-     *
-     * @return `true`  if the button is being pressed
-     */
-    bool is_button_being_pressed();
-
-    /**
-     * Returns if the button is being pressed for an extended period.
-     *
-     * Use to check for long press.
-     *
-     * @return `true` if the button is being pressed.
-     */
-    bool is_long_press();
-
-    /**
-     * Call this function frequently to update the LED state
-     * and handle button presses.
-     */
-    void poll();
-
-    /**
-     * Sleep until an event occurs.
-     * 
-     * In practice, it will sleep until a SYSTICK interrupt (once every ms)
-     * or an EXTI interrupt (on FUSB302 interrupt line) occurs.
-     */
-    void wait_for_event();
-
-    /**
      * Returns time stamp.
      *
      * @return number of milliseconds since a fixed time in the past.
@@ -145,18 +83,6 @@ struct mcu_hal {
      * @return 'true' if it has been reached or passed, 'false' otherwise
      */
     bool has_expired(uint32_t timeout);
-
-  private:
-    void update_led();
-
-    color led_color;
-    uint32_t led_on;
-    uint32_t led_off;
-    bool is_led_on;
-    uint32_t led_timeout;
-    uint32_t last_button_change_time;
-    bool is_button_down;
-    bool button_has_been_pressed;
 };
 
 extern mcu_hal hal;
