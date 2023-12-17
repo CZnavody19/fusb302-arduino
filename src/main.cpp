@@ -6,10 +6,10 @@
 // https://opensource.org/licenses/MIT
 //
 
+#include <Arduino.h>
+
 #include "pd_debug.h"
 #include "pd_sink.h"
-
-#include <algorithm>
 
 using namespace usb_pd;
 
@@ -18,16 +18,16 @@ static pd_sink power_sink;
 
 static void sink_callback(callback_event event);
 
-int main() {
+void setup() {
+    // Initialize USB PD controller
     hal.init();
-
     power_sink.set_event_callback(sink_callback);
     power_sink.init();
+}
 
+void loop() {
     // Work in regular loop
-    while (true) {
-        power_sink.poll();
-    }
+    power_sink.poll();
 }
 
 // Called when the USB PD controller triggers an event

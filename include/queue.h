@@ -8,9 +8,8 @@
 // FIFO queue
 //
 
-#pragma once
 
-#include <utility>
+#pragma once
 
 namespace usb_pd {
 
@@ -111,6 +110,19 @@ template <class T, int N> void queue<T, N>::add_item(T& item) {
     buf_head = new_head;
 }
 
+// template <class T, int N> T queue<T, N>::pop_item() {
+//     int tail = buf_tail;
+//     if (tail == buf_head)
+//         return T(); // queue is empty
+
+//     int new_tail = tail + 1;
+//     if (new_tail >= BUF_SIZE)
+//         new_tail = 0;
+
+//     buf_tail = new_tail;
+//     return std::move(buffer[tail]);
+// }
+
 template <class T, int N> T queue<T, N>::pop_item() {
     int tail = buf_tail;
     if (tail == buf_head)
@@ -121,7 +133,7 @@ template <class T, int N> T queue<T, N>::pop_item() {
         new_tail = 0;
 
     buf_tail = new_tail;
-    return std::move(buffer[tail]);
+    return buffer[tail]; // No std::move here
 }
 
 template <class T, int N> void queue<T, N>::clear() {
