@@ -1,5 +1,15 @@
 # Open-Source Firmware for ZY12PDN USB-PD
 
+## Arduino framework
+
+#### This is a stripped down version of the Open-source firmware for USB Power Delivery trigger board based on an FUSB302B power delivery controller and a STM32F030F4 MCU.
+
+#### Only the communication with the FUSB302B is implemented.
+
+#### I made it work with the Arduino framework.
+
+### Below is the original README
+
 Open-source firmware for USB Power Delivery trigger board based on an FUSB302B power delivery controller and a STM32F030F4 MCU.
 
 <img src="doc/board.png" alt="ZY12PDN board" width="600">
